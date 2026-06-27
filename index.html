@@ -25,11 +25,12 @@ label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut
 .chip.rec.on{background:var(--accent2);border-color:var(--accent2)}
 main{padding:14px 20px 60px;max-width:1400px;margin:0 auto}
 .count{color:var(--mut);font-size:13px;margin:4px 0 14px}
-.grid{display:grid;gap:13px}
+.grid{display:grid;gap:13px;grid-auto-rows:1fr}
+.grid .card{height:100%}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:.15s}
 .card:hover{border-color:#3a4856;transform:translateY(-2px)}
 .card.m2{border-color:#6b7686}.card.m3{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,206,84,.3) inset}
-.cover{position:relative;aspect-ratio:16/9;background:#0c1116;cursor:pointer}
+.cover{position:relative;aspect-ratio:1/1;background:#0c1116;cursor:pointer}
 .cover img{width:100%;height:100%;object-fit:cover;display:block}
 .cover .none{display:flex;align-items:center;justify-content:center;height:100%;color:var(--mut);font-size:12px}
 .badge{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--gold);color:#332600}
@@ -45,12 +46,16 @@ main{padding:14px 20px 60px;max-width:1400px;margin:0 auto}
 .tag{font-size:11px;padding:2px 7px;border-radius:6px;background:var(--panel2);color:var(--mut);border:1px solid var(--line)}
 .tag.cat{color:var(--accent);border-color:#3a2a22;background:#231a15}
 .tag.verify{color:var(--warn);border-color:#3a2222;background:#241616}
-.note{color:#c4cdd6;font-size:12.5px;flex:1}
+.note{color:#c4cdd6;font-size:12.5px}
+.grid:not(.compact) .note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
 .by{font-size:11.5px;color:var(--mut)}.by b{color:var(--accent2);font-weight:600}
-a.map{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:12.5px;padding:6px 11px;border-radius:9px;margin-top:2px;width:fit-content}
-a.map:hover{border-color:var(--accent);color:var(--accent)}
-/* compact grid (6/8 cols): hide note/thumbs/by */
-.grid.compact .thumbs,.grid.compact .by,.grid.compact a.map{display:none}
+.grid .by{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid .meta{flex-wrap:nowrap;overflow:hidden}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.map{display:inline-flex;align-items:center;gap:5px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:12px;padding:6px 10px;border-radius:9px;cursor:pointer}
+.map:hover{border-color:var(--accent);color:var(--accent)}
+/* compact grid (6/8 cols): hide thumbs/by/actions */
+.grid.compact .thumbs,.grid.compact .by,.grid.compact .acts{display:none}
 .grid.compact .note{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px}
 .grid.compact .body{padding:8px 10px 10px;gap:4px}.grid.compact .name{font-size:13.5px}
 /* LIST view */
@@ -138,7 +143,8 @@ function tab(t){const V={places:'vPlaces',itin:'vItin',map:'vMap'},T={places:'tP
 for(const k in V){el(V[k]).classList.toggle('hidden',k!==t);el(T[k]).classList.toggle('on',k===t);}
 window.scrollTo(0,0);if(t==='map'){initMap();setTimeout(()=>{if(MAP)MAP.invalidateSize();},60);}}
 const CATCOL={"Beach / Swim":"#4da6ff","Dinner":"#ff5a5a","Coffee / Lunch":"#ffae42","Wine Bar":"#b07bff","Nightlife":"#ff6fb5","Town / Area":"#4dd0c4","Culture":"#7ed957","Shop":"#9aa7b3","Transport":"#d9c64d","Other":"#9aa7b3"};
-let MAP=null;
+let MAP=null,MARKERS={};
+function focusMap(pid,lat,lng){tab('map');initMap();setTimeout(()=>{if(!MAP)return;MAP.invalidateSize();MAP.setView([lat,lng],16,{animate:true});const m=pid&&MARKERS[pid];if(m){m.addTo(MAP);m.openPopup();}},120);}
 function initMap(){
  if(MAP)return;
  MAP=L.map('map',{scrollWheelZoom:true}).setView([43.288,5.375],12);
@@ -149,6 +155,7 @@ function initMap(){
   const mk=L.circleMarker([p.lat,p.lng],{radius:big?9:6,color:big?"#ffce54":col,weight:big?2:1,fillColor:col,fillOpacity:.9});
   const ph=(p.photos&&p.photos[0])?`<img src="${p.photos[0]}" style="width:100%;height:84px;object-fit:cover;border-radius:6px;margin-bottom:6px">`:'';
   mk.bindPopup(`${ph}<b>${p.n}</b>${p.count>=2?` · <span style="color:${big?'#ffce54':'#8b97a6'}">${p.count}×</span>`:''}<br>${p.rating?'⭐ '+p.rating+' ('+(p.reviews||0)+')':''} · ${p.cat}<br><span style="color:var(--mut)">by ${p.by.join(', ')}</span>${p.note?'<br>'+p.note:''}<br><a href="${mapUrl(p)}" target="_blank">Open in Google Maps ↗</a>`,{maxWidth:240});
+  if(p.pid)MARKERS[p.pid]=mk;
   (groups[p.cat]=groups[p.cat]||L.layerGroup()).addLayer(mk);});
  const ov={};Object.keys(groups).sort().forEach(c=>{ov[`<span style="color:${CATCOL[c]||'#9aa7b3'}">●</span> ${c}`]=groups[c].addTo(MAP);});
  L.control.layers(null,ov,{collapsed:false,position:'topright'}).addTo(MAP);
@@ -193,9 +200,9 @@ function render(){
    return `<div class="lrow ${p.count>=3?'m3':p.count>=2?'m2':''}">${ph.length?`<img src="${ph[0]}" loading="lazy" onclick="openLb(${pj},0)">`:'<img>'}
    <div class="li"><div class="ln">${p.n} ${p.count>=2?`<span style="color:${p.count>=3?'var(--gold)':'#8b97a6'};font-size:12px">${p.count}×</span>`:''}</div>
    <div class="lm">${p.cat}${p.cat2?' · '+p.cat2:''} · by ${p.by.join(', ')}${p.note?' — '+p.note:''}</div></div>
-   <div class="lr">${p.rating?`<span class="s">★ ${p.rating}</span><br><span style="color:var(--mut)">${p.reviews||0}</span>`:''}${userLoc&&p._d<9000?`<br>${p._d.toFixed(1)} km`:''}<br><a target="_blank" href="${mapUrl(p)}">Maps ↗</a></div></div>`;}).join('');
+   <div class="lr">${p.rating?`<span class="s">★ ${p.rating}</span><br><span style="color:var(--mut)">${p.reviews||0}</span>`:''}${userLoc&&p._d<9000?`<br>${p._d.toFixed(1)} km`:''}<br><a target="_blank" href="${mapUrl(p)}">Maps ↗</a>${p.lat!=null?` · <a style="cursor:pointer" onclick="focusMap('${p.pid||''}',${p.lat},${p.lng})">🗺</a>`:''}</div></div>`;}).join('');
  }else if(view==='table'){out.className='tblw';out.innerHTML=`<table><thead><tr><th>Place</th><th>Category</th><th>★</th><th>Reviews</th><th>×</th><th>Recommended by</th>${userLoc?'<th>Dist</th>':''}<th></th></tr></thead><tbody>`+
-   rows.map(p=>`<tr><td class="n">${p.n}</td><td>${p.cat}</td><td>${p.rating?'<span class="s">'+p.rating+'</span>':'—'}</td><td>${p.reviews||'—'}</td><td>${p.count>=2?'<b style="color:'+(p.count>=3?'var(--gold)':'#8b97a6')+'">'+p.count+'</b>':p.count}</td><td>${p.by.join(', ')}</td>${userLoc?'<td>'+(p._d<9000?p._d.toFixed(1)+' km':'—')+'</td>':''}<td><a target="_blank" href="${mapUrl(p)}">Maps ↗</a></td></tr>`).join('')+`</tbody></table>`;
+   rows.map(p=>`<tr><td class="n">${p.n}</td><td>${p.cat}</td><td>${p.rating?'<span class="s">'+p.rating+'</span>':'—'}</td><td>${p.reviews||'—'}</td><td>${p.count>=2?'<b style="color:'+(p.count>=3?'var(--gold)':'#8b97a6')+'">'+p.count+'</b>':p.count}</td><td>${p.by.join(', ')}</td>${userLoc?'<td>'+(p._d<9000?p._d.toFixed(1)+' km':'—')+'</td>':''}<td><a target="_blank" href="${mapUrl(p)}">Maps ↗</a>${p.lat!=null?` · <a style="cursor:pointer" onclick="focusMap('${p.pid||''}',${p.lat},${p.lng})">🗺</a>`:''}</td></tr>`).join('')+`</tbody></table>`;
  }else{const compact=cols>=6;out.className='grid'+(compact?' compact':'');out.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;
    out.innerHTML=rows.map(p=>{const ph=p.photos||[],pj=JSON.stringify(ph).replace(/"/g,'&quot;');
    const cover=ph.length?`<img src="${ph[0]}" loading="lazy" onclick="openLb(${pj},0)">`:`<div class="none">no photo</div>`;
@@ -205,8 +212,8 @@ function render(){
    return `<div class="card ${p.count>=3?'m3':p.count>=2?'m2':''}"><div class="cover">${cover}${badge}<div class="rk">${rk}</div></div>${thumbs}
     <div class="body"><div class="name">${p.n}</div>
     <div class="meta"><span class="tag cat">${p.cat}</span>${p.cat2?`<span class="tag">${p.cat2}</span>`:''}${p.verify?'<span class="tag verify">⚠</span>':''}</div>
-    ${p.note?`<div class="note">${p.note}</div>`:''}<div class="by">by ${p.by.map(b=>`<b>${b}</b>`).join(', ')}</div>
-    <a class="map" target="_blank" href="${mapUrl(p)}">📍 Open in Google Maps</a></div></div>`;}).join('');}
+    <div class="note">${p.note||''}</div><div class="by">by ${p.by.map(b=>`<b>${b}</b>`).join(', ')}</div>
+    <div class="acts"><a class="map" target="_blank" href="${mapUrl(p)}">📍 Google Maps</a>${p.lat!=null?`<button class="map" onclick="focusMap('${p.pid||''}',${p.lat},${p.lng})">🗺 Map tab</button>`:''}</div></div></div>`;}).join('');}
 }
 ['q','sort','view','cols','min','ess'].forEach(id=>{const e=el(id);e.addEventListener(id==='q'?'input':'change',render);});
 el('lists').innerHTML=LISTS.map(l=>`<div class="listcard"><div class="by"><b style="color:var(--accent2)">${l[1]}</b></div><a target="_blank" href="${l[0]}">${l[0].replace('https://','')}</a></div>`).join('');

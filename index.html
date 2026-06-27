@@ -158,7 +158,13 @@ function initMap(){
   if(p.pid)MARKERS[p.pid]=mk;
   (groups[p.cat]=groups[p.cat]||L.layerGroup()).addLayer(mk);});
  const ov={};Object.keys(groups).sort().forEach(c=>{ov[`<span style="color:${CATCOL[c]||'#9aa7b3'}">●</span> ${c}`]=groups[c].addTo(MAP);});
- L.control.layers(null,ov,{collapsed:false,position:'topright'}).addTo(MAP);
+ let lc;const Toggle=L.Control.extend({options:{position:'topright'},onAdd:function(){
+   const b=L.DomUtil.create('button','map maptog');b.textContent='Categories ▴';
+   L.DomEvent.disableClickPropagation(b);
+   b.onclick=()=>{const c=lc.getContainer(),h=c.style.display==='none';c.style.display=h?'':'none';b.textContent='Categories '+(h?'▴':'▾');};
+   return b;}});
+ MAP.addControl(new Toggle());
+ lc=L.control.layers(null,ov,{collapsed:false,position:'topright'}).addTo(MAP);
 }
 function toggleF(){const f=el('filters'),b=el('ftog');const h=f.classList.toggle('hidden');b.classList.toggle('on',!h);b.textContent='Filters '+(h?'▾':'▴');}
 function mapUrl(p){let u="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.n+" Marseille");if(p.pid)u+="&query_place_id="+p.pid;return u;}

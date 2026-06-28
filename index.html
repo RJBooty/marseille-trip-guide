@@ -30,9 +30,9 @@ main{padding:14px 20px 60px;max-width:1400px;margin:0 auto}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:.15s}
 .card:hover{border-color:#3a4856;transform:translateY(-2px)}
 .card.m2{border-color:#6b7686}.card.m3{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,206,84,.3) inset}
-.cover{position:relative;aspect-ratio:1/1;background:#0c1116;cursor:pointer}
-.cover img{width:100%;height:100%;object-fit:cover;display:block}
-.cover .none{display:flex;align-items:center;justify-content:center;height:100%;color:var(--mut);font-size:12px}
+.cover{position:relative;width:100%;padding-top:100%;flex:none;background:#0c1116;cursor:pointer;overflow:hidden}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cover .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:12px}
 .badge{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--gold);color:#332600}
 .badge.b2{background:#6b7686;color:#0f1419}
 .rk{position:absolute;bottom:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap}
